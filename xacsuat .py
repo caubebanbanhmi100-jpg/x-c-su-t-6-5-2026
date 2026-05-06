@@ -118,8 +118,7 @@ if st.button("🗑️ XÓA TẤT CẢ DỮ LIỆU", use_container_width=True):
         st.session_state[key] = ""
     st.rerun() 
 
-# --- ĐOẠN MÃ 60 VÒNG LẶP SUY LUẬN (DÁN ĐÈ TỪ ĐÂY ĐẾN HẾT) ---
-if calculate:
+# --- ĐOẠN MÃ 60 VÒNG LẶP SUY LUẬN (DÁN ĐÈ TỪ ĐÂY ĐẾN HẾT) ---if calculate:
     try:
         # Chuyển đổi dữ liệu nhập vào thành số thực (float)
         p = {k: float(st.session_state[k]) if st.session_state[k].strip() != "" else None for k in keys}
