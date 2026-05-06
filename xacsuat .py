@@ -1,77 +1,113 @@
 import streamlit as st
 
-st.set_page_config(page_title="Hệ Thống Xác Suất Toàn Diện", layout="centered")
+# Cấu hình giao diện rộng để chứa đủ các cột
+st.set_page_config(page_title="Siêu Máy Tính Xác Suất 12H", layout="wide")
 
 # Định nghĩa ký hiệu toán học
-GIAO = "∩"
-HOP = "∪"
-DOI = "̅"
+G, H, D, K = "∩", "∪", "̅", "|"
 
-st.title("📊 Hệ Thống Xác Suất Toàn Diện")
-st.markdown("---")
+st.title("🚀 Siêu Máy Tính Xác Suất Toàn Diện")
+st.info("Nhập ít nhất 2-3 giá trị bất kỳ để hệ thống tự động suy luận toàn bộ ma trận biến cố.")
 
-st.subheader("Dữ liệu đầu vào")
-col1, col2 = st.columns(2)
+# --- PHẦN 1: GIAO DIỆN NHẬP LIỆU (3 CỘT) ---
+col1, col2, col3 = st.columns(3)
 
 with col1:
-    pa = st.text_input("P(A)", placeholder="Ví dụ: 0.6")
-    pb = st.text_input("P(B)", placeholder="Ví dụ: 0.4")
-    pab = st.text_input("P(A|B)", placeholder="Xác suất A khi biết B")
-    pba = st.text_input("P(B|A)", placeholder="Xác suất B khi biết A")
-    # Đã sửa lỗi NameError ở đây
-    padb = st.text_input(f"P(A|B{DOI})", placeholder="Xác suất A khi biết B đối")
+    pa = st.text_input("P(A)", key="A")
+    pb = st.text_input("P(B)", key="B")
+    pagb = st.text_input(f"P(A {G} B)", key="AgB")
+    pahb = st.text_input(f"P(A {H} B)", key="AhB")
+    pda = st.text_input(f"P(A{D})", key="dA")
+    pdb = st.text_input(f"P(B{D})", key="dB")
 
 with col2:
-    # Đã sửa lỗi NameError ở đây
-    pbda = st.text_input(f"P(B|A{DOI})", placeholder="Xác suất B khi biết A đối")
-    pagb = st.text_input(f"P(A {GIAO} B)", placeholder="Xác suất giao")
-    pahb = st.text_input(f"P(A {HOP} B)", placeholder="Xác suất hợp")
-    pda = st.text_input(f"P(A{DOI})", placeholder="Biến cố đối của A")
-    pdb = st.text_input(f"P(B{DOI})", placeholder="Biến cố đối của B")
+    pab = st.text_input(f"P(A{K}B)", key="A_B")
+    pba = st.text_input(f"P(B{K}A)", key="B_A")
+    padb = st.text_input(f"P(A{K}B{D})", key="A_dB")
+    pbda = st.text_input(f"P(B{K}A{D})", key="B_dA")
+    pdab = st.text_input(f"P(A{D}{K}B)", key="dA_B")
+    pdbda = st.text_input(f"P(B{D}{K}A{D})", key="dB_dA")
+
+with col3:
+    pagdb = st.text_input(f"P(A {G} B{D})", key="AgdB")
+    pdagb = st.text_input(f"P(A{D} {G} B)", key="dAgB")
+    pdagdb = st.text_input(f"P(A{D} {G} B{D})", key="dAgdB")
+    pdahb = st.text_input(f"P(A{D} {H} B)", key="dAhB")
+    pdbha = st.text_input(f"P(B{D} {H} A)", key="dBhA")
+    pdahdb = st.text_input(f"P(A{D} {H} B{D})", key="dAhdB")
 
 is_ind = st.checkbox("Giả định A, B độc lập")
 
-if st.button("TÍNH TOÁN", type="primary", use_container_width=True):
+# --- PHẦN 2: LOGIC TÍNH TOÁN ---
+if st.button("🚀 BẮT ĐẦU GIẢI TOÁN", type="primary", use_container_width=True):
     try:
-        inputs = {
-            'A': pa, 'B': pb, 'A_B': pab, 'B_A': pba, 
-            'AgB': pagb, 'AhB': pahb, 'dA': pda, 'dB': pdb
-        }
-        p = {k: float(v) if v else None for k, v in inputs.items()}
-        
-        process = []
-        for _ in range(10):
-            # 1. Tính biến cố đối
-            if p['A'] is not None and p['dA'] is None:
-                p['dA'] = round(1 - p['A'], 4); process.append(f"P(A{DOI}) = 1 - P(A) = {p['dA']}")
-            if p['dA'] is not None and p['A'] is None:
-                p['A'] = round(1 - p['dA'], 4); process.append(f"P(A) = 1 - P(A{DOI}) = {p['A']}")
-            if p['B'] is not None and p['dB'] is None:
-                p['dB'] = round(1 - p['B'], 4); process.append(f"P(B{DOI}) = 1 - P(B) = {p['dB']}")
-            if p['dB'] is not None and p['B'] is None:
-                p['B'] = round(1 - p['dB'], 4); process.append(f"P(B) = 1 - P(B{DOI}) = {p['B']}")
+        # Lấy dữ liệu từ các ô nhập
+        keys = ["A", "B", "AgB", "AhB", "dA", "dB", "A_B", "B_A", "A_dB", "B_dA", "dA_B", "dB_dA", "AgdB", "dAgB", "dAgdB", "dAhB", "dBhA", "dAhdB"]
+        p = {k: float(st.session_state[k]) if st.session_state[k] else None for k in keys}
+        steps = []
+
+        # Chạy vòng lặp suy luận 15 lần để vét cạn công thức (Cơ chế Domino)
+        for _ in range(15):
+            # 1. Biến cố đối
+            if p['A'] is not None and p['dA'] is None: p['dA'] = round(1-p['A'], 4); steps.append(f"P(A{D}) = 1 - P(A) = {p['dA']}")
+            if p['dA'] is not None and p['A'] is None: p['A'] = round(1-p['dA'], 4); steps.append(f"P(A) = 1 - P(A{D}) = {p['A']}")
+            if p['B'] is not None and p['dB'] is None: p['dB'] = round(1-p['B'], 4); steps.append(f"P(B{D}) = 1 - P(B) = {p['dB']}")
+            if p['dB'] is not None and p['B'] is None: p['B'] = round(1-p['dB'], 4); steps.append(f"P(B) = 1 - P(B{D}) = {p['B']}")
 
             # 2. Độc lập
             if is_ind and p['A'] is not None and p['B'] is not None and p['AgB'] is None:
-                p['AgB'] = round(p['A'] * p['B'], 4)
-                process.append(f"Vì A,B độc lập: P(A{GIAO}B) = P(A).P(B) = {p['AgB']}")
+                p['AgB'] = round(p['A']*p['B'], 4); steps.append(f"Vì A,B độc lập: P(A{G}B) = P(A).P(B) = {p['AgB']}")
 
-            # 3. Công thức cộng (Xác suất hợp)
-            if p['A'] is not None and p['B'] is not None and p['AgB'] is not None and p['AhB'] is None:
-                p['AhB'] = round(p['A'] + p['B'] - p['AgB'], 4)
-                process.append(f"P(A{HOP}B) = P(A)+P(B)-P(A{GIAO}B) = {p['AhB']}")
+            # 3. Luật cộng & Giao
+            if all(p[k] is not None for k in ['A','B','AgB']) and p['AhB'] is None:
+                p['AhB'] = round(p['A']+p['B']-p['AgB'], 4); steps.append(f"P(A{H}B) = P(A)+P(B)-P(A{G}B) = {p['AhB']}")
+            if all(p[k] is not None for k in ['A','B','AhB']) and p['AgB'] is None:
+                p['AgB'] = round(p['A']+p['B']-p['AhB'], 4); steps.append(f"P(A{G}B) = P(A)+P(B)-P(A{H}B) = {p['AgB']}")
 
-            # 4. Xác suất có điều kiện
-            if p['AgB'] is not None and p['B'] is not None and p['B']>0 and p['A_B'] is None:
-                p['A_B'] = round(p['AgB'] / p['B'], 4); process.append(f"P(A|B) = P(A{GIAO}B)/P(B) = {p['A_B']}")
-            if p['AgB'] is not None and p['A'] is not None and p['A']>0 and p['B_A'] is None:
-                p['B_A'] = round(p['AgB'] / p['A'], 4); process.append(f"P(B|A) = P(A{GIAO}B)/P(A) = {p['B_A']}")
+            # 4. Xác suất có điều kiện thuận
+            if p['AgB'] is not None and p['B'] and p['A_B'] is None: p['A_B'] = round(p['AgB']/p['B'], 4); steps.append(f"P(A|B) = P(A{G}B)/P(B) = {p['A_B']}")
+            if p['AgB'] is not None and p['A'] and p['B_A'] is None: p['B_A'] = round(p['AgB']/p['A'], 4); steps.append(f"P(B|A) = P(A{G}B)/P(A) = {p['B_A']}")
 
-        st.subheader("📍 Quy trình giải chi tiết")
-        if process:
-            for step in list(dict.fromkeys(process)):
-                st.success(step)
+            # 5. Luật hiệu (Venn)
+            if p['A'] is not None and p['AgB'] is not None and p['AgdB'] is None:
+                p['AgdB'] = round(p['A'] - p['AgB'], 4); steps.append(f"P(A{G}B{D}) = P(A) - P(A{G}B) = {p['AgdB']}")
+            if p['B'] is not None and p['AgB'] is not None and p['dAgB'] is None:
+                p['dAgB'] = round(p['B'] - p['AgB'], 4); steps.append(f"P(A{D}{G}B) = P(B) - P(A{G}B) = {p['dAgB']}")
+
+            # 6. De Morgan
+            if p['AhB'] is not None and p['dAgdB'] is None:
+                p['dAgdB'] = round(1 - p['AhB'], 4); steps.append(f"P(A{D}{G}B{D}) = 1 - P(A{H}B) = {p['dAgdB']}")
+            if p['AgB'] is not None and p['dAhdB'] is None:
+                p['dAhdB'] = round(1 - p['AgB'], 4); steps.append(f"P(A{D}{H}B{D}) = 1 - P(A{G}B) = {p['dAhdB']}")
+
+        # --- PHẦN 3: HIỂN THỊ MA TRẬN KẾT QUẢ ---
+        st.markdown("---")
+        st.subheader("📊 Ma trận kết quả đầy đủ")
+        res_col1, res_col2, res_col3 = st.columns(3)
+        
+        # Danh sách nhãn hiển thị cho đẹp
+        display_labels = {
+            "A": "P(A)", "B": "P(B)", "dA": f"P(A{D})", "dB": f"P(B{D})",
+            "AgB": f"P(A{G}B)", "AhB": f"P(A{H}B)", "A_B": "P(A|B)", "B_A": "P(B|A)",
+            "AgdB": f"P(A{G}B{D})", "dAgB": f"P(A{D}{G}B)", "dAgdB": f"P(A{D}{G}B{D})", "dAhdB": f"P(A{D}{H}B{D})"
+        }
+
+        for i, (key, label) in enumerate(display_labels.items()):
+            val_out = p.get(key)
+            target = [res_col1, res_col2, res_col3][i % 3]
+            if val_out is not None:
+                target.metric(label, val_out)
+            else:
+                target.write(f"**{label}**: ❌")
+
+        # --- PHẦN 4: HIỂN THỊ CÁC BƯỚC GIẢI ---
+        st.markdown("---")
+        st.subheader("📚 Quy trình giải chi tiết (Dành cho tự luận)")
+        if steps:
+            for s in list(dict.fromkeys(steps)):
+                st.success(s)
         else:
-            st.warning("Hãy nhập dữ liệu để bắt đầu tính toán!")
-    except Exception:
-        st.error("Lỗi: Vui lòng chỉ nhập số thập phân!")
+            st.warning("Nhập thêm ít nhất 2 biến số để thấy quy trình giải!")
+
+    except Exception as e:
+        st.error(f"Lỗi: Hãy nhập đúng định dạng số thập phân (Ví dụ: 0.5). Chi tiết: {e}")
