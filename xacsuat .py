@@ -1,68 +1,80 @@
 import streamlit as st
 
-st.set_page_config(page_title="Xác Suất Pro 2026", layout="centered")
+st.set_page_config(page_title="Hệ Thống Xác Suất Toàn Diện", layout="centered")
 
-# Định nghĩa ký hiệu
+# Định nghĩa ký hiệu toán học
 GIAO = "∩"
+HOP = "∪"
 DOI = "̅"
 
-st.title("🧮 Hệ Thống Giải Toán Xác Suất 2026")
+st.title("📊 Hệ Thống Xác Suất Toàn Diện")
 st.markdown("---")
 
-# Nhập liệu chia 2 cột
+st.subheader("Dữ liệu đầu vào")
+# Chia thành 2 cột để giống giao diện cũ nhưng gọn hơn
 col1, col2 = st.columns(2)
 
 with col1:
     pa = st.text_input("P(A)", placeholder="Ví dụ: 0.6")
     pb = st.text_input("P(B)", placeholder="Ví dụ: 0.4")
     pab = st.text_input("P(A|B)", placeholder="Xác suất A khi biết B")
+    pba = st.text_input("P(B|A)", placeholder="Xác suất B khi biết A")
+    padb = st.text_input(f"P(A|{B}{DOI})", placeholder="Xác suất A khi biết B đối")
 
 with col2:
-    pba = st.text_input("P(B|A)", placeholder="Xác suất B khi biết A")
-    pagb = st.text_input(f"P(A {GIAO} B)", placeholder="Ví dụ: 0.2")
+    pbda = st.text_input(f"P(B|{A}{DOI})", placeholder="Xác suất B khi biết A đối")
+    pagb = st.text_input(f"P(A {GIAO} B)", placeholder="Xác suất giao")
+    pahb = st.text_input(f"P(A {HOP} B)", placeholder="Xác suất hợp")
     pda = st.text_input(f"P(A{DOI})", placeholder="Biến cố đối của A")
+    pdb = st.text_input(f"P(B{DOI})", placeholder="Biến cố đối của B")
 
 is_ind = st.checkbox("Giả định A, B độc lập")
 
-if st.button("TÍNH TOÁN CHI TIẾT", type="primary", use_container_width=True):
+if st.button("TÍNH TOÁN", type="primary", use_container_width=True):
     try:
-        # Chuyển đổi dữ liệu (silently filter data based on logic)
-        p = {
-            'A': float(pa) if pa else None,
-            'B': float(pb) if pb else None,
-            'A_B': float(pab) if pab else None,
-            'B_A': float(pba) if pba else None,
-            'AgB': float(pagb) if pagb else None,
-            'dA': float(pda) if pda else None
+        # Chuyển đổi dữ liệu sang dạng số
+        inputs = {
+            'A': pa, 'B': pb, 'A_B': pab, 'B_A': pba, 
+            'AgB': pagb, 'AhB': pahb, 'dA': pda, 'dB': pdb
         }
+        p = {k: float(v) if v else None for k, v in inputs.items()}
         
         process = []
-        # Thực hiện vòng lặp suy luận (logic tương tự bản cũ)
-        for _ in range(5):
-            # Tính biến cố đối
+        # Chạy vòng lặp tính toán để suy luận các biến còn thiếu
+        for _ in range(10):
+            # 1. Tính biến cố đối
             if p['A'] is not None and p['dA'] is None:
-                p['dA'] = round(1 - p['A'], 4)
-                process.append(f"P(A{DOI}) = 1 - P(A) = 1 - {p['A']} = {p['dA']}")
-            elif p['dA'] is not None and p['A'] is None:
-                p['A'] = round(1 - p['dA'], 4)
-                process.append(f"P(A) = 1 - P(A{DOI}) = 1 - {p['dA']} = {p['A']}")
+                p['dA'] = round(1 - p['A'], 4); process.append(f"P(A{DOI}) = 1 - P(A) = {p['dA']}")
+            if p['dA'] is not None and p['A'] is None:
+                p['A'] = round(1 - p['dA'], 4); process.append(f"P(A) = 1 - P(A{DOI}) = {p['A']}")
+            if p['B'] is not None and p['dB'] is None:
+                p['dB'] = round(1 - p['B'], 4); process.append(f"P(B{DOI}) = 1 - P(B) = {p['dB']}")
+            if p['dB'] is not None and p['B'] is None:
+                p['B'] = round(1 - p['dB'], 4); process.append(f"P(B) = 1 - P(B{DOI}) = {p['B']}")
 
-            # Tính giao dựa trên độc lập
+            # 2. Độc lập
             if is_ind and p['A'] is not None and p['B'] is not None and p['AgB'] is None:
                 p['AgB'] = round(p['A'] * p['B'], 4)
-                process.append(f"Do A, B độc lập: P(A{GIAO}B) = P(A).P(B) = {p['A']}.{p['B']} = {p['AgB']}")
+                process.append(f"Vì A,B độc lập: P(A{GIAO}B) = P(A).P(B) = {p['AgB']}")
 
-            # Công thức xác suất có điều kiện
-            if p['AgB'] is not None and p['B'] is not None and p['B'] > 0 and p['A_B'] is None:
-                p['A_B'] = round(p['AgB'] / p['B'], 4)
-                process.append(f"P(A|B) = P(A{GIAO}B) / P(B) = {p['AgB']} / {p['B']} = {p['A_B']}")
+            # 3. Công thức cộng (Xác suất hợp)
+            if p['A'] is not None and p['B'] is not None and p['AgB'] is not None and p['AhB'] is None:
+                p['AhB'] = round(p['A'] + p['B'] - p['AgB'], 4)
+                process.append(f"P(A{HOP}B) = P(A)+P(B)-P(A{GIAO}B) = {p['AhB']}")
 
-        st.subheader("📍 Kết quả & Quy trình")
+            # 4. Xác suất có điều kiện
+            if p['AgB'] is not None and p['B'] is not None and p['B']>0 and p['A_B'] is None:
+                p['A_B'] = round(p['AgB'] / p['B'], 4); process.append(f"P(A|B) = P(A{GIAO}B)/P(B) = {p['A_B']}")
+            if p['AgB'] is not None and p['A'] is not None and p['A']>0 and p['B_A'] is None:
+                p['B_A'] = round(p['AgB'] / p['A'], 4); process.append(f"P(B|A) = P(A{GIAO}B)/P(A) = {p['B_A']}")
+
+        st.subheader(" quy trình giải chi tiết")
         if process:
+            # Loại bỏ các bước lặp lại
             for step in list(dict.fromkeys(process)):
                 st.success(step)
         else:
-            st.warning("Nhập thêm dữ liệu để hệ thống tính toán!")
-            
+            st.warning("Hãy nhập ít nhất 2 hoặc 3 giá trị để hệ thống có thể tính toán!")
+
     except Exception:
-        st.error("Lỗi: Vui lòng chỉ nhập số thập phân (ví dụ: 0.5)")
+        st.error("Lỗi: Bạn chỉ được nhập số thập phân!")
