@@ -11,7 +11,6 @@ st.title("📊 Hệ Thống Xác Suất Toàn Diện")
 st.markdown("---")
 
 st.subheader("Dữ liệu đầu vào")
-# Chia thành 2 cột để giống giao diện cũ nhưng gọn hơn
 col1, col2 = st.columns(2)
 
 with col1:
@@ -19,10 +18,12 @@ with col1:
     pb = st.text_input("P(B)", placeholder="Ví dụ: 0.4")
     pab = st.text_input("P(A|B)", placeholder="Xác suất A khi biết B")
     pba = st.text_input("P(B|A)", placeholder="Xác suất B khi biết A")
-    padb = st.text_input(f"P(A|{B}{DOI})", placeholder="Xác suất A khi biết B đối")
+    # Đã sửa lỗi NameError ở đây
+    padb = st.text_input(f"P(A|B{DOI})", placeholder="Xác suất A khi biết B đối")
 
 with col2:
-    pbda = st.text_input(f"P(B|{A}{DOI})", placeholder="Xác suất B khi biết A đối")
+    # Đã sửa lỗi NameError ở đây
+    pbda = st.text_input(f"P(B|A{DOI})", placeholder="Xác suất B khi biết A đối")
     pagb = st.text_input(f"P(A {GIAO} B)", placeholder="Xác suất giao")
     pahb = st.text_input(f"P(A {HOP} B)", placeholder="Xác suất hợp")
     pda = st.text_input(f"P(A{DOI})", placeholder="Biến cố đối của A")
@@ -32,7 +33,6 @@ is_ind = st.checkbox("Giả định A, B độc lập")
 
 if st.button("TÍNH TOÁN", type="primary", use_container_width=True):
     try:
-        # Chuyển đổi dữ liệu sang dạng số
         inputs = {
             'A': pa, 'B': pb, 'A_B': pab, 'B_A': pba, 
             'AgB': pagb, 'AhB': pahb, 'dA': pda, 'dB': pdb
@@ -40,7 +40,6 @@ if st.button("TÍNH TOÁN", type="primary", use_container_width=True):
         p = {k: float(v) if v else None for k, v in inputs.items()}
         
         process = []
-        # Chạy vòng lặp tính toán để suy luận các biến còn thiếu
         for _ in range(10):
             # 1. Tính biến cố đối
             if p['A'] is not None and p['dA'] is None:
@@ -68,13 +67,11 @@ if st.button("TÍNH TOÁN", type="primary", use_container_width=True):
             if p['AgB'] is not None and p['A'] is not None and p['A']>0 and p['B_A'] is None:
                 p['B_A'] = round(p['AgB'] / p['A'], 4); process.append(f"P(B|A) = P(A{GIAO}B)/P(A) = {p['B_A']}")
 
-        st.subheader(" quy trình giải chi tiết")
+        st.subheader("📍 Quy trình giải chi tiết")
         if process:
-            # Loại bỏ các bước lặp lại
             for step in list(dict.fromkeys(process)):
                 st.success(step)
         else:
-            st.warning("Hãy nhập ít nhất 2 hoặc 3 giá trị để hệ thống có thể tính toán!")
-
+            st.warning("Hãy nhập dữ liệu để bắt đầu tính toán!")
     except Exception:
-        st.error("Lỗi: Bạn chỉ được nhập số thập phân!")
+        st.error("Lỗi: Vui lòng chỉ nhập số thập phân!")
