@@ -164,4 +164,4 @@ if calculate_clicked:
                 break
 
         # Hiển thị kết quả... (Giữ nguyên phần hiển thị bên dưới)
-
+Finally 
