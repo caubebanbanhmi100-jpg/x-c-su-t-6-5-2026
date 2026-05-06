@@ -111,3 +111,9 @@ if st.button("🚀 BẮT ĐẦU GIẢI TOÁN", type="primary", use_container_wid
 
     except Exception as e:
         st.error(f"Lỗi: Hãy nhập đúng định dạng số thập phân (Ví dụ: 0.5). Chi tiết: {e}")
+        câu # --- NÚT XÓA TẤT CẢ (Dán vào trước nút BẮT ĐẦU GIẢI TOÁN) ---
+if st.button("🗑️ XÓA TẤT CẢ DỮ LIỆU", use_container_width=True):
+    for key in keys:
+        st.session_state[key] = ""
+    st.rerun() 
+
