@@ -6,7 +6,7 @@ st.set_page_config(page_title="Siêu Máy Tính Xác Suất 12H", layout="wide")
 # Định nghĩa ký hiệu toán học
 G, H, D, K = "∩", "∪", "̅", "|"
 
-st.title("Siêu máy tính xác suất thống kê 🤖 ")
+st.title("Siêu máy tính xác suất thống kê 🤖 -tạo bởi Đại Khái và Gemini ")
 st.info("Nhập ít nhất 2-3 giá trị bất kỳ để hệ thống tự động suy luận toàn bộ ma trận biến cố.")
 
 # --- PHẦN 1: GIAO DIỆN NHẬP LIỆU (3 CỘT) ---
